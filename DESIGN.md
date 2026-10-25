@@ -22,7 +22,10 @@ left, sticky side rail on the right with day summary and accuracy evidence, so t
 first viewport holds all key numbers. Hourly records and methodology swap into the
 rail (it widens) instead of extending the page. One focused hour is shared by the
 chart marker, the readout above the chart and the highlighted record row.
-Below 1080px the rail stacks under the chart. Mobile: horizontal navigation,
+Collapsing (ClickUp-style): sidebar folds to a 64px icon strip ([ key), side rail
+folds to a 52px icon strip (] key), and each rail section folds to its heading plus
+a one-line summary. Choices persist in localStorage.
+Below 1080px the rail stacks under the chart and cannot collapse. Mobile: horizontal navigation,
 stacked controls, chart remains legible and table scrolls independently.
 Motion: sliding view pill, rail panel slide-in, numbers glide between selections,
 hint bubbles on hover/focus. All disabled under reduced motion.

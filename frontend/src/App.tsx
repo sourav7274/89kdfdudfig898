@@ -26,14 +26,20 @@ import {
   Check,
   ChevronLeft,
   ChevronRight,
+  ChevronDown,
   CircleHelp,
   Clock3,
   Database,
+  Gauge,
   Grid2X2,
   History,
   Info,
+  PanelLeftClose,
+  PanelLeftOpen,
+  PanelRightOpen,
   RotateCw,
   Table2,
+  Target,
   Wind,
   X,
 } from "lucide-react";
@@ -175,14 +181,118 @@ function Hint({ children, id }: { children: ReactNode; id?: string }) {
   );
 }
 
+type Layout = {
+  nav: boolean;
+  rail: boolean;
+  glance: boolean;
+  evidence: boolean;
+};
+const defaultLayout: Layout = {
+  nav: true,
+  rail: true,
+  glance: true,
+  evidence: true,
+};
+function useLayout() {
+  const [layout, setLayout] = useState<Layout>(() => {
+    try {
+      return {
+        ...defaultLayout,
+        ...JSON.parse(localStorage.getItem("gridbricks-layout") ?? "{}"),
+      };
+    } catch {
+      return defaultLayout;
+    }
+  });
+  useEffect(() => {
+    try {
+      localStorage.setItem("gridbricks-layout", JSON.stringify(layout));
+    } catch {
+      /* Storage can be unavailable; the layout still works for this visit. */
+    }
+  }, [layout]);
+  const toggle = (key: keyof Layout, value?: boolean) =>
+    setLayout((current) => ({ ...current, [key]: value ?? !current[key] }));
+  return [layout, toggle] as const;
+}
+function useMedia(query: string) {
+  const [matches, setMatches] = useState(
+    () => window.matchMedia(query).matches,
+  );
+  useEffect(() => {
+    const media = window.matchMedia(query);
+    const update = () => setMatches(media.matches);
+    media.addEventListener("change", update);
+    return () => media.removeEventListener("change", update);
+  }, [query]);
+  return matches;
+}
+
+/* A rail section that folds down to its heading and a one-line summary. */
+function Fold({
+  id,
+  title,
+  meta,
+  summary,
+  open,
+  onToggle,
+  className = "",
+  children,
+}: {
+  id: string;
+  title: string;
+  meta: ReactNode;
+  summary: ReactNode;
+  open: boolean;
+  onToggle: () => void;
+  className?: string;
+  children: ReactNode;
+}) {
+  return (
+    <section
+      className={`fold ${className} ${open ? "open" : ""}`}
+      aria-labelledby={`${id}-heading`}
+    >
+      <div className="rail-heading">
+        <h2 id={`${id}-heading`}>
+          <button
+            className="fold-toggle"
+            aria-expanded={open}
+            aria-controls={`${id}-body`}
+            onClick={onToggle}
+          >
+            <ChevronDown size={15} className="fold-chevron" />
+            {title}
+          </button>
+        </h2>
+        <span className="fold-meta">
+          <span className="fold-summary" aria-hidden={open}>
+            {summary}
+          </span>
+          <span className="date-window" aria-hidden={!open}>
+            {meta}
+          </span>
+        </span>
+      </div>
+      <div className="fold-body" id={`${id}-body`} inert={!open}>
+        <div className="fold-inner">{children}</div>
+      </div>
+    </section>
+  );
+}
+
 function Evidence({
   metrics,
   review,
   data,
+  open,
+  onToggle,
 }: {
   metrics: Metrics;
   review: boolean;
   data: Analysis;
+  open: boolean;
+  onToggle: () => void;
 }) {
   const direction =
     metrics.average_signed_error_mw == null
@@ -194,19 +304,25 @@ function Evidence({
           : "Positive and negative errors balance";
   const coverage = metrics.coverage_percent ?? 0;
   return (
-    <section className="evidence" aria-labelledby="accuracy-heading">
-      <div className="rail-heading">
-        <h2 id="accuracy-heading">
-          {review ? "How did it perform?" : "Historical accuracy"}
-        </h2>
-        <span className="date-window">
-          {data.view === "decision"
-            ? data.historical_accuracy.delivery_date_from
-              ? `${formatDate(data.historical_accuracy.delivery_date_from, true)}–${formatDate(data.historical_accuracy.delivery_date_to!, true)}`
-              : "No earlier days"
-            : formatDate(data.delivery_date, true)}
-        </span>
-      </div>
+    <Fold
+      id="accuracy"
+      className="evidence"
+      title={review ? "How did it perform?" : "Historical accuracy"}
+      open={open}
+      onToggle={onToggle}
+      summary={
+        <>
+          MAE <strong>{formatNumber(metrics.mae_mw)}</strong> MW
+        </>
+      }
+      meta={
+        data.view === "decision"
+          ? data.historical_accuracy.delivery_date_from
+            ? `${formatDate(data.historical_accuracy.delivery_date_from, true)}–${formatDate(data.historical_accuracy.delivery_date_to!, true)}`
+            : "No earlier days"
+          : formatDate(data.delivery_date, true)
+      }
+    >
       <dl className="evidence-list">
         <div>
           <dt>
@@ -275,7 +391,7 @@ function Evidence({
           ? ` Missing forecasts: ${metrics.missing_forecast_hours} h. Incomplete actuals: ${metrics.incomplete_actual_hours} h. Counts may overlap.`
           : ""}
       </p>
-    </section>
+    </Fold>
   );
 }
 
@@ -493,10 +609,18 @@ function AnalysisPanel({
   data,
   side,
   openSide,
+  layout,
+  toggle,
+  railOpen,
+  narrow,
 }: {
   data: Analysis;
   side: Side;
   openSide: (next: Side, trigger?: HTMLElement | null) => void;
+  layout: Layout;
+  toggle: (key: keyof Layout, value?: boolean) => void;
+  railOpen: boolean;
+  narrow: boolean;
 }) {
   const review = data.view === "retrospective";
   const periods = review ? data.periods : data.forecasts;
@@ -544,7 +668,9 @@ function AnalysisPanel({
           )}
         </p>
       </div>
-      <div className={`stage ${side === "summary" ? "" : "side-open"}`}>
+      <div
+        className={`stage ${!railOpen ? "rail-collapsed" : side === "summary" ? "" : "side-open"}`}
+      >
         <section className="chart-panel" aria-labelledby="chart-heading">
           <div className="panel-heading">
             <div>
@@ -638,9 +764,22 @@ function AnalysisPanel({
             <span>00:00–24:00 · UK time (GMT)</span>
           </div>
         </section>
+        <div className="side-wrap">
+          {!narrow && (
+            <button
+              className={`edge-toggle rail-edge ${railOpen ? "" : "flipped"}`}
+              onClick={() => toggle("rail")}
+              aria-label={railOpen ? "Collapse side panel" : "Expand side panel"}
+              aria-expanded={railOpen}
+              aria-controls="side-panel"
+              data-tip={railOpen ? "Collapse panel  ]" : "Expand panel  ]"}
+            >
+              <ChevronRight size={13} />
+            </button>
+          )}
         <aside
           id="side-panel"
-          className="side"
+          className={`side ${railOpen ? "" : "collapsed"}`}
           aria-label={
             side === "records"
               ? "Hourly records"
@@ -652,15 +791,77 @@ function AnalysisPanel({
             if (event.key === "Escape" && side !== "summary") openSide("summary");
           }}
         >
-          {side === "summary" ? (
+          {!railOpen ? (
+            <div className="rail-strip">
+              <button
+                className="icon-button"
+                onClick={() => toggle("rail", true)}
+                aria-label="Expand side panel"
+                data-tip="Expand panel"
+              >
+                <PanelRightOpen size={17} />
+              </button>
+              <span className="strip-divider" />
+              <button
+                className="icon-button"
+                onClick={() => {
+                  toggle("glance", true);
+                  openSide("summary");
+                  toggle("rail", true);
+                }}
+                aria-label="Day at a glance"
+                data-tip="Day at a glance"
+              >
+                <Gauge size={17} />
+              </button>
+              <button
+                className="icon-button"
+                onClick={() => {
+                  toggle("evidence", true);
+                  openSide("summary");
+                  toggle("rail", true);
+                }}
+                aria-label={review ? "How did it perform?" : "Historical accuracy"}
+                data-tip={review ? "Performance" : "Historical accuracy"}
+              >
+                <Target size={17} />
+              </button>
+              <button
+                className="icon-button"
+                onClick={(event) => openSide("records", event.currentTarget)}
+                aria-label="Hourly records"
+                data-tip="Hourly records"
+              >
+                <Table2 size={17} />
+              </button>
+              <button
+                className="icon-button"
+                onClick={(event) => openSide("method", event.currentTarget)}
+                aria-label="Methodology"
+                data-tip="Methodology"
+              >
+                <BookOpen size={17} />
+              </button>
+            </div>
+          ) : side === "summary" ? (
             <div className="side-view" key="summary">
-              <section className="glance" aria-labelledby="glance-heading">
-                <div className="rail-heading">
-                  <h2 id="glance-heading">Day at a glance</h2>
-                  <span className="date-window">
+              <Fold
+                id="glance"
+                className="glance"
+                title="Day at a glance"
+                open={layout.glance}
+                onToggle={() => toggle("glance")}
+                summary={
+                  <>
+                    Peak <strong>{formatNumber(peak?.forecast_mw)}</strong> MW
+                  </>
+                }
+                meta={
+                  <>
                     <Database size={12} /> Elexon · WINDFOR
-                  </span>
-                </div>
+                  </>
+                }
+              >
                 <dl className="glance-list">
                   <div>
                     <dt>Forecast range</dt>
@@ -712,8 +913,14 @@ function AnalysisPanel({
                     </dd>
                   </div>
                 </dl>
-              </section>
-              <Evidence metrics={metrics} review={review} data={data} />
+              </Fold>
+              <Evidence
+                metrics={metrics}
+                review={review}
+                data={data}
+                open={layout.evidence}
+                onToggle={() => toggle("evidence")}
+              />
             </div>
           ) : (
             <div className="side-view" key={side}>
@@ -754,6 +961,7 @@ function AnalysisPanel({
             </div>
           )}
         </aside>
+        </div>
       </div>
     </>
   );
@@ -766,6 +974,25 @@ export default function App() {
   const [draftCutoff, setDraftCutoff] = useState(initial.filters.cutoff);
   const [formError, setFormError] = useState("");
   const trigger = useRef<HTMLElement | null>(null);
+  const [layout, toggle] = useLayout();
+  const narrow = useMedia("(max-width: 1080px)");
+  const railOpen = layout.rail || narrow;
+  useEffect(() => {
+    function onKey(event: KeyboardEvent) {
+      const target = event.target as HTMLElement;
+      if (
+        event.metaKey ||
+        event.ctrlKey ||
+        event.altKey ||
+        target.closest("input, textarea, select, [contenteditable]")
+      )
+        return;
+      if (event.key === "[") toggle("nav");
+      if (event.key === "]") toggle("rail");
+    }
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  });
   const client = useQueryClient();
   const snapshot = useQuery(snapshotOptions);
   const query = useQuery(
@@ -790,7 +1017,10 @@ export default function App() {
       );
   }
   function openSide(next: Side, from?: HTMLElement | null) {
-    if (next !== "summary") trigger.current = from ?? null;
+    if (next !== "summary") {
+      trigger.current = from ?? null;
+      toggle("rail", true);
+    }
     setSide(next);
     requestAnimationFrame(() => {
       if (next === "summary") {
@@ -812,16 +1042,25 @@ export default function App() {
   const failed = snapshot.isError || query.isError;
   const delivery = changeDay(filters.date, 1);
   return (
-    <div className="app-shell">
+    <div className={`app-shell ${layout.nav ? "" : "nav-collapsed"}`}>
       <a className="skip-link" href="#workspace">
         Skip to analysis
       </a>
       <aside className="sidebar">
+        <button
+          className="edge-toggle nav-edge"
+          onClick={() => toggle("nav")}
+          aria-label={layout.nav ? "Collapse navigation" : "Expand navigation"}
+          aria-expanded={layout.nav}
+          data-tip={layout.nav ? "Collapse sidebar  [" : "Expand sidebar  ["}
+        >
+          {layout.nav ? <PanelLeftClose size={14} /> : <PanelLeftOpen size={14} />}
+        </button>
         <a className="brand" href="/" aria-label="GridBricks pilot home">
           <span className="brand-symbol">
             <Grid2X2 size={23} strokeWidth={2.3} />
           </span>
-          <span>
+          <span className="brand-text">
             GridBricks
             <span className="brand-caption">by REint · assignment pilot</span>
           </span>
@@ -829,6 +1068,7 @@ export default function App() {
         <div className="workspace-label">Energy intelligence</div>
         <nav aria-label="Workspace navigation">
           <button
+            data-tip="Wind outlook"
             className={view === "decision" ? "nav-item active" : "nav-item"}
             aria-current={view === "decision" ? "page" : undefined}
             onClick={() => setView("decision")}
@@ -836,9 +1076,10 @@ export default function App() {
             onFocus={() => prefetch("decision")}
           >
             <Wind size={18} />
-            Wind outlook
+            <span className="nav-label">Wind outlook</span>
           </button>
           <button
+            data-tip="Historical review"
             className={view === "review" ? "nav-item active" : "nav-item"}
             aria-current={view === "review" ? "page" : undefined}
             onClick={() => setView("review")}
@@ -846,9 +1087,10 @@ export default function App() {
             onFocus={() => prefetch("review")}
           >
             <History size={18} />
-            Historical review
+            <span className="nav-label">Historical review</span>
           </button>
           <button
+            data-tip="Methodology"
             className={`nav-item methodology-nav ${side === "method" ? "active" : ""}`}
             onClick={(event) =>
               openSide(side === "method" ? "summary" : "method", event.currentTarget)
@@ -856,11 +1098,11 @@ export default function App() {
             disabled={!query.data}
           >
             <BookOpen size={18} />
-            Methodology
+            <span className="nav-label">Methodology</span>
           </button>
         </nav>
         <div className="sidebar-bottom">
-          <div className="snapshot-indicator">
+          <div className="snapshot-indicator" data-tip="Historical snapshot">
             <span className="status-dot" />
             Historical snapshot
           </div>
@@ -1073,6 +1315,10 @@ export default function App() {
               data={query.data}
               side={side}
               openSide={openSide}
+              layout={layout}
+              toggle={toggle}
+              railOpen={railOpen}
+              narrow={narrow}
             />
           )}
           <footer className="workspace-footer">
