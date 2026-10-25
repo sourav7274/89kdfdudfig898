@@ -16,9 +16,20 @@ workspace rather than reproducing marketing claims or its landing-page layout.
 
 ## Structure and behaviour
 
-Desktop: compact persistent left navigation, workspace header, date/cutoff toolbar,
-chart-led analysis, historical metrics and optional data table. Mobile: horizontal
-navigation, stacked controls, chart remains legible and table scrolls independently.
+Desktop: compact persistent left navigation; the top bar holds one "Show actuals"
+checkbox, the only switch between decision and after-delivery review. Title and
+date/cutoff toolbar share one row. Full-width stage: chart on the
+left, sticky side rail on the right with day summary and accuracy evidence, so the
+first viewport holds all key numbers. Hourly records and methodology swap into the
+rail (it widens) instead of extending the page. One focused hour is shared by the
+chart marker, the readout above the chart and the highlighted record row.
+Collapsing (ClickUp-style): sidebar folds to a 64px icon strip ([ key), side rail
+folds to a 52px icon strip (] key), and each rail section folds to its heading plus
+a one-line summary. Choices persist in localStorage.
+Below 1080px the rail stacks under the chart and cannot collapse. Mobile: horizontal navigation,
+stacked controls, chart remains legible and table scrolls independently.
+Motion: sliding view pill, rail panel slide-in, numbers glide between selections,
+hint bubbles on hover/focus. All disabled under reduced motion.
 No fabricated alerts, account controls or unavailable navigation destinations.
 Focus outlines, reduced-motion support, labelled inputs, explicit empty/error/loading
 states. Selected inputs never label results from a previous query.

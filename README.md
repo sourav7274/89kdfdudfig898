@@ -41,7 +41,8 @@ use `no-store` because React Query manages their in-memory cache.
 
 The responsive interface follows reint.ai's light surfaces, Inter type and green
 accent, adapted to a decision workspace. It is explicitly an assignment pilot.
-Switch between decision outlook and after-delivery review, change January dates,
+Tick "Show actuals" to switch from the decision outlook to the after-delivery review,
+change January dates,
 apply a cutoff, inspect the hourly provenance table, or download its numeric CSV.
 Date, cutoff and view are reflected in the URL for sharing or reloading.
 
