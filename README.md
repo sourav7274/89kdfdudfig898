@@ -55,10 +55,15 @@ docker run --rm -p 8000:8000 gridbricks-wind
 The image contains the saved Elexon snapshot, so it needs no network access, API
 keys or database. Docker practices used:
 
-- Two-stage build: Node only builds the frontend; the final image is Python slim
-  with no Node, no build tools and no pip (removed after installing dependencies).
+- Small image: **~71 MB on disk, ~16 MB compressed download** (down from 208 MB
+  with a Debian `python:slim` base). Three stages: Node builds the frontend, a
+  Python stage installs dependencies, and the final image is plain `alpine:3.24`
+  with Alpine's own Python. No Node, pip, compilers or package manager ship.
+  Unused standard-library parts (tests, IDE, installer, docs) and precompiled
+  stdlib caches are removed; this adds about 0.5 s to container start-up only.
 - Exact base image versions, dependency layers cached before source code, BuildKit
   cache mounts for npm/pip, and a `.dockerignore` keeping the build context small.
+- Trivy scan: 0 high/critical vulnerabilities (OS and Python packages).
 - Runs as a non-root user; application files are root-owned and read-only to it.
 - `docker-compose.yml` adds a read-only root filesystem, drops all Linux
   capabilities and sets `no-new-privileges`.
