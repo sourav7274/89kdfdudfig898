@@ -7,3 +7,6 @@ data/raw/
 data/*.build.sqlite3
 artifacts/
 tests/
+Dockerfile
+docker-compose.yml
+.dockerignore

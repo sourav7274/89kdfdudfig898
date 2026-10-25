@@ -1,0 +1,15 @@
+services:
+  app:
+    build: .
+    image: gridbricks-wind:latest
+    ports:
+      - "8000:8000"
+    restart: unless-stopped
+    # Runtime hardening: the app only reads its bundled snapshot.
+    read_only: true
+    tmpfs:
+      - /tmp
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
