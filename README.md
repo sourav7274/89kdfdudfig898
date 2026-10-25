@@ -1,6 +1,14 @@
 # Wind forecast decision support
 
-**Live app: https://89kdfdudfig898.vercel.app**
+## Submission links
+
+- **Video demo and technical walkthrough (unlisted, 8:24):** https://youtu.be/tprjK9-EYvo
+- **Live app:** https://89kdfdudfig898.vercel.app
+- **Public repository:** https://github.com/sourav7274/89kdfdudfig898
+
+Access checked on 25 October 2026 in an Incognito browser without signing in:
+the unlisted video played, repository files and README were readable, and the
+live app loaded its chart, forecasts and historical accuracy data.
 
 A pilot web app for a UK utility's day-ahead buying team. For any January 2026
 decision day it shows the latest national wind forecast that was available at the
