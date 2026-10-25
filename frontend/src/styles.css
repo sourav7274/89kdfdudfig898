@@ -1344,7 +1344,7 @@ tbody tr.focused {
 }
 
 /* Narrower desktops: controls drop below the title */
-@media (max-width: 1360px) {
+@media (max-width: 1180px) {
   .page-heading {
     align-items: flex-start;
   }
@@ -1575,5 +1575,80 @@ tbody tr.focused {
     animation: none !important;
     transition: none !important;
     scroll-behavior: auto !important;
+  }
+}
+
+/* Desktop: the app is one screen. Chart and rail fill the remaining height,
+   and long content (hourly records) scrolls inside its own panel. */
+@media (min-width: 1081px) and (min-height: 620px) {
+  .app-shell {
+    height: 100vh;
+    overflow: hidden;
+  }
+  .main-shell {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    min-height: 0;
+  }
+  .workspace {
+    flex: 1;
+    min-height: 0;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    overflow: auto;
+    padding-bottom: 14px;
+  }
+  .stage {
+    flex: 1;
+    min-height: 380px;
+    align-items: stretch;
+  }
+  .chart-panel {
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+  }
+  .chart {
+    flex: 1;
+    height: auto;
+    min-height: 200px;
+  }
+  .side-wrap {
+    position: relative;
+    top: 0;
+    display: flex;
+    min-height: 0;
+  }
+  .side {
+    flex: 1;
+    max-height: none;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+  .side.collapsed {
+    overflow: visible;
+  }
+  .side-view {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+  }
+  .side-summary,
+  .side-method {
+    overflow-y: auto;
+  }
+  .side-records .table-scroll {
+    flex: 1;
+    min-height: 0;
+    overflow: auto;
+    scrollbar-width: thin;
+    scrollbar-color: #c9d1c2 transparent;
+  }
+  .workspace-footer {
+    padding-top: 12px;
   }
 }

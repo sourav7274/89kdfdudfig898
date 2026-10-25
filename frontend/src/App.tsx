@@ -844,7 +844,7 @@ function AnalysisPanel({
               </button>
             </div>
           ) : side === "summary" ? (
-            <div className="side-view" key="summary">
+            <div className="side-view side-summary" key="summary">
               <Fold
                 id="glance"
                 className="glance"
@@ -923,7 +923,7 @@ function AnalysisPanel({
               />
             </div>
           ) : (
-            <div className="side-view" key={side}>
+            <div className={`side-view side-${side}`} key={side}>
               <div className="side-header">
                 <button
                   className="icon-button"
