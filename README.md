@@ -15,7 +15,8 @@ AI assistants were used during development, as permitted by the brief:
 
 - **OpenAI Codex**: data import, backend analysis, API, tests and the first frontend.
 - **Claude (Anthropic, via Claude Code)**: UI redesign (wide layout, side rail,
-  collapsible panels, "Show actuals" toggle), Docker setup and README updates.
+  collapsible panels, "Show actuals" toggle), Docker setup, code review and
+  README updates.
 
 All generated code was reviewed, run and tested locally before committing.
 
@@ -29,10 +30,31 @@ All generated code was reviewed, run and tested locally before committing.
   compare it with the forecast. Untick to return to the decision-time view.
 - The right-hand rail shows the day's forecast range, peak and historical accuracy
   (MAE, average signed error, coverage). **Hourly records** and **Methodology**
-  open in the rail; hover a row or the chart to inspect one hour.
-- Collapse the sidebar with `[` and the rail with `]`, or fold any rail section.
-  Layout choices are remembered in the browser.
+  open in the rail (Esc or the back arrow returns to the summary).
+- One focused hour is shared by the chart, the readout above it and the hourly
+  records: hover the chart, a record row or the peak value to inspect that hour.
+  With nothing hovered, the readout shows the peak forecast hour.
+- Collapse the sidebar with `[` and the rail with `]`, or fold any rail section to
+  a one-line summary. Layout choices are remembered in the browser.
 - Export the hourly data as CSV. Date, cutoff and view are kept in the URL.
+- Below 1080px wide the rail stacks under the chart; on phones the navigation moves
+  to the top. Animations are switched off when the system asks for reduced motion.
+
+## What the January 2026 data shows
+
+With the default 09:00 cutoff, across all 31 decisions (delivery 2 January to
+1 February, 744 hours, 100% matched coverage):
+
+- Mean absolute error about **2,039 MW**, roughly 18% of mean actual wind output
+  (about 11,280 MW).
+- Average signed error about **+1,748 MW**: the forecast available at the cutoff
+  was higher than the outcome on 27 of 31 delivery days.
+- The largest miss was early on 12 January: about 20,900 MW forecast against
+  about 14,100 MW actual (+6,900 MW).
+
+These figures describe this sample only. The app does not explain the cause of
+the bias (for example curtailment or dataset definitions) or turn it into a
+purchase quantity.
 
 ## How to start the application
 
