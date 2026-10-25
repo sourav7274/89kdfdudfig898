@@ -77,8 +77,14 @@ docker run --rm -p 8000:8000 gridbricks-wind
 The image contains the saved Elexon snapshot, so it needs no network access, API
 keys or database. Docker practices used:
 
-- Two-stage build: Node only builds the frontend; the final image is Python slim
-  with no Node, no build tools and no pip (removed after installing dependencies).
+- One combined image, approximately **208 MB uncompressed locally**, based on
+  Debian `python:3.14.9-slim-trixie`. Node builds the React frontend in a separate
+  stage; the final Python image serves both its static files and the API on port
+  8000. No Node server or frontend development dependencies ship in the runtime.
+  pip is removed after installing Python dependencies.
+- Two Uvicorn worker processes serve requests inside that same container. A local
+  bounded check completed five simultaneous full-month decision requests within
+  eight seconds (slowest about 7.1 s); this is not a production capacity guarantee.
 - Exact base image versions, dependency layers cached before source code, BuildKit
   cache mounts for npm/pip, and a `.dockerignore` keeping the build context small.
 - Runs as a non-root user; application files are root-owned and read-only to it.

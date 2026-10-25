@@ -27,8 +27,7 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
 
 WORKDIR /app
 COPY requirements.txt ./
-# pip is only needed to install; removing it drops its bundled libraries
-# (urllib3, msgpack) and their CVEs from the final image.
+# pip is only needed during installation; keep its installer libraries out of runtime.
 RUN --mount=type=cache,target=/root/.cache/pip \
     pip install -r requirements.txt \
  && pip uninstall -y pip
@@ -45,5 +44,6 @@ EXPOSE 8000
 HEALTHCHECK --interval=30s --timeout=3s --start-period=10s --retries=3 \
   CMD ["python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/api/health', timeout=2)"]
 
-# Exec form: uvicorn is PID 1 and receives SIGTERM directly for a clean shutdown.
-CMD ["uvicorn", "backend.app:app", "--host", "0.0.0.0", "--port", "8000", "--timeout-graceful-shutdown", "10"]
+# Two processes isolate CPU-heavy historical analysis while retaining one container.
+# Exec form lets uvicorn's supervisor receive SIGTERM for a clean shutdown.
+CMD ["uvicorn", "backend.app:app", "--host", "0.0.0.0", "--port", "8000", "--workers", "2", "--timeout-graceful-shutdown", "10"]
