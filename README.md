@@ -53,8 +53,17 @@ docker run --rm -p 8000:8000 gridbricks-wind
 ```
 
 The image contains the saved Elexon snapshot, so it needs no network access, API
-keys or database. The container runs as a non-root user and has a health check on
-`/api/health`.
+keys or database. Docker practices used:
+
+- Two-stage build: Node only builds the frontend; the final image is Python slim
+  with no Node, no build tools and no pip (removed after installing dependencies).
+- Exact base image versions, dependency layers cached before source code, BuildKit
+  cache mounts for npm/pip, and a `.dockerignore` keeping the build context small.
+- Runs as a non-root user; application files are root-owned and read-only to it.
+- `docker-compose.yml` adds a read-only root filesystem, drops all Linux
+  capabilities and sets `no-new-privileges`.
+- Health check on `/api/health`; exec-form command so uvicorn shuts down cleanly
+  on `docker stop`.
 
 ### Option 2: run locally without Docker
 
