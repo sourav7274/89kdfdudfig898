@@ -6,3 +6,7 @@ frontend/node_modules/
 frontend/dist/
 data/raw/
 artifacts/
+.vercel/
+.env
+.env.*
+!.env.example

@@ -3,6 +3,7 @@ from contextlib import closing
 from functools import lru_cache
 import hashlib
 import json
+import os
 from typing import Annotated
 from fastapi import FastAPI, HTTPException, Query
 from fastapi.staticfiles import StaticFiles
@@ -65,5 +66,5 @@ def review(decision_date: DateParameter, cutoff: CutoffParameter = "09:00"):
 
 
 frontend_build = DATABASE.parent.parent / "frontend" / "dist"
-if frontend_build.is_dir():
+if not os.environ.get("VERCEL") and frontend_build.is_dir():
     app.mount("/", StaticFiles(directory=frontend_build, html=True), name="frontend")

@@ -106,3 +106,57 @@ The API integration checks use the saved snapshot. Download the snapshot using
 
 Docker, deployment and video remain to be implemented. This is a local application;
 no public deployment is claimed.
+
+## Vercel multi-service configuration
+
+`vercel.json` defines two independently built services in one project. Import the
+repository with the **project Root Directory set to the repository root (`.`)**,
+not `frontend`. Service roots are configured inside `vercel.json`:
+
+- `app`: root `.`, FastAPI entrypoint `backend.app:app`. Public requests to
+  `/api/...` go here, preserving the full path and query string.
+- `frontend`: root `frontend`, Vite build via `npm ci` and `npm run build`, with
+  `dist` output. All other public requests go here.
+
+The frontend continues to fetch same-origin `/api/...` URLs. It is a static React
+application with no server-side function calling the Python service, so **no
+service binding is declared or needed**. Binding URLs are only injected into
+runtime functions; they must not be exposed through `VITE_*` build variables.
+If server-to-server calls are added later, declare a binding on the caller and
+read Vercel's injected URL at runtime.
+
+The public routing deliberately does not expose FastAPI's `/docs`, `/redoc` or
+`/openapi.json` endpoints; those paths belong to the frontend service. They remain
+available when running the Python server directly for local development.
+
+The backend bundles `data/elexon.sqlite3` and `data/manifest.json` using its scoped
+function configuration. The database is opened read-only; no persistent writes,
+external database, Elexon fetching during builds, or API secrets are required.
+The backend does not mount `frontend/dist` when `VERCEL` is set; the independent
+frontend service owns static files. Node 24 and Python 3.14 match the checked local
+runtimes. `.vercelignore` excludes local environments, dependencies, build output,
+raw source downloads and test/render artifacts from uploads.
+
+### Local service routing check
+
+After authenticating Vercel CLI and linking to the intended project, run from the
+repository root:
+
+```powershell
+npx vercel dev --listen 3000
+```
+
+Use the single origin http://localhost:3000. Check `/`, `/api/health`,
+`/api/snapshot`, and `/api/decision?decision_date=2026-01-15&cutoff=09:00`.
+Change a date/cutoff and open review to verify the browser uses the same origin.
+Vercel dev owns service routing; the Vite localhost proxy is disabled when
+`VERCEL=1`. Standalone Vite plus Uvicorn development still works as documented above.
+
+Configuration validation and application tests pass locally. The initial
+`vercel dev` attempt required Vercel authentication, so integrated Vercel routing
+and a hosted deployment have not yet been verified. Service names, exposure and
+the no-binding design are pending the user's requested confirmation.
+
+References: [Services](https://vercel.com/docs/services),
+[routing](https://vercel.com/docs/services/routing),
+[runtime bindings](https://vercel.com/docs/services/bindings).
