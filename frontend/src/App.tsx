@@ -32,7 +32,6 @@ import {
   Database,
   Gauge,
   Grid2X2,
-  History,
   Info,
   PanelLeftClose,
   PanelLeftOpen,
@@ -1067,28 +1066,15 @@ export default function App() {
         </a>
         <div className="workspace-label">Energy intelligence</div>
         <nav aria-label="Workspace navigation">
-          <button
+          <a
+            href="#workspace"
             data-tip="Wind outlook"
-            className={view === "decision" ? "nav-item active" : "nav-item"}
-            aria-current={view === "decision" ? "page" : undefined}
-            onClick={() => setView("decision")}
-            onMouseEnter={() => prefetch("decision")}
-            onFocus={() => prefetch("decision")}
+            className="nav-item active"
+            aria-current="page"
           >
             <Wind size={18} />
             <span className="nav-label">Wind outlook</span>
-          </button>
-          <button
-            data-tip="Historical review"
-            className={view === "review" ? "nav-item active" : "nav-item"}
-            aria-current={view === "review" ? "page" : undefined}
-            onClick={() => setView("review")}
-            onMouseEnter={() => prefetch("review")}
-            onFocus={() => prefetch("review")}
-          >
-            <History size={18} />
-            <span className="nav-label">Historical review</span>
-          </button>
+          </a>
           <button
             data-tip="Methodology"
             className={`nav-item methodology-nav ${side === "method" ? "active" : ""}`}
@@ -1122,28 +1108,26 @@ export default function App() {
             Forecasts <ChevronRight size={14} />
             <strong>Wind generation</strong>
           </div>
-          <div
-            className="view-switch"
-            role="group"
-            aria-label="Analysis view"
-            data-view={view}
+          <label
+            className={`actuals-toggle ${view === "review" ? "on" : ""}`}
+            onMouseEnter={() => prefetch("review")}
           >
-            <span className="view-pill" aria-hidden="true" />
-            <button
-              aria-pressed={view === "decision"}
-              onClick={() => setView("decision")}
-              onMouseEnter={() => prefetch("decision")}
-            >
-              Decision outlook
-            </button>
-            <button
-              aria-pressed={view === "review"}
-              onClick={() => setView("review")}
-              onMouseEnter={() => prefetch("review")}
-            >
-              After-delivery review
-            </button>
-          </div>
+            <input
+              type="checkbox"
+              checked={view === "review"}
+              onChange={(event) =>
+                setView(event.target.checked ? "review" : "decision")
+              }
+              onFocus={() => prefetch("review")}
+            />
+            <span className="check-box" aria-hidden="true">
+              <Check size={12} strokeWidth={3} />
+            </span>
+            <span className="actuals-text">
+              <strong>Show actuals</strong>
+              <span>Recorded after delivery</span>
+            </span>
+          </label>
           <div className="topbar-end">
             <span className="data-status" role="status">
               {query.isFetching || snapshot.isPending ? (

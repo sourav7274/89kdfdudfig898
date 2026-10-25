@@ -261,50 +261,6 @@ p {
   color: var(--ink);
   font-weight: 500;
 }
-.view-switch {
-  position: relative;
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  background: #eef1e9;
-  border: 1px solid #e3e7dd;
-  border-radius: 9px;
-  padding: 3px;
-}
-.view-switch button {
-  position: relative;
-  z-index: 1;
-  border: 0;
-  background: transparent;
-  padding: 7px 16px;
-  font-size: 12px;
-  font-weight: 500;
-  color: var(--muted);
-  border-radius: 6px;
-  white-space: nowrap;
-}
-.view-switch button:hover {
-  color: var(--ink);
-}
-.view-switch button[aria-pressed="true"] {
-  color: var(--green-dark);
-  font-weight: 600;
-}
-.view-pill {
-  position: absolute;
-  top: 3px;
-  bottom: 3px;
-  left: 3px;
-  width: calc(50% - 3px);
-  background: var(--paper);
-  border-radius: 6px;
-  box-shadow:
-    0 1px 2px #2b2a2a14,
-    0 2px 8px #2b2a2a0a;
-  transition: transform 0.42s var(--ease-out);
-}
-.view-switch[data-view="review"] .view-pill {
-  transform: translateX(100%);
-}
 .topbar-end {
   justify-self: end;
   display: flex;
@@ -1343,6 +1299,103 @@ tbody tr.focused {
   }
 }
 
+
+/* "Show actuals" check: the only switch between decision and review views */
+.actuals-toggle {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  background: var(--paper);
+  padding: 7px 13px 7px 9px;
+  cursor: pointer;
+  transition:
+    border-color 0.18s ease-out,
+    background-color 0.18s ease-out;
+  user-select: none;
+}
+.actuals-toggle input {
+  position: absolute;
+  opacity: 0;
+  width: 1px;
+  height: 1px;
+}
+.check-box {
+  display: grid;
+  place-items: center;
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+  border: 1.5px solid #b9c2b1;
+  border-radius: 5px;
+  background: var(--paper);
+  color: white;
+  transition:
+    background-color 0.18s ease-out,
+    border-color 0.18s ease-out,
+    box-shadow 0.25s var(--ease-out);
+}
+.check-box svg {
+  opacity: 0;
+  transform: scale(0.4) rotate(-12deg);
+  transition:
+    opacity 0.15s ease-out,
+    transform 0.3s var(--ease-out);
+}
+.actuals-toggle:hover .check-box {
+  border-color: var(--green);
+}
+.actuals-toggle.on .check-box {
+  background: var(--actual);
+  border-color: var(--actual);
+  box-shadow: 0 2px 8px #546e8540;
+}
+.actuals-toggle.on .check-box svg {
+  opacity: 1;
+  transform: none;
+}
+.actuals-toggle input:focus-visible + .check-box {
+  outline: 3px solid #148937;
+  outline-offset: 3px;
+}
+.actuals-toggle:hover {
+  border-color: #cdd6c6;
+}
+.actuals-toggle.on {
+  background: #eef2f6;
+  border-color: #c8d3de;
+}
+.actuals-text {
+  display: flex;
+  align-items: baseline;
+  gap: 7px;
+  line-height: 1.2;
+  white-space: nowrap;
+}
+.actuals-text strong {
+  font-size: 12px;
+  font-weight: 550;
+  color: var(--ink);
+}
+.actuals-text span {
+  font-size: 10px;
+  color: var(--muted);
+}
+.actuals-toggle.on .actuals-text strong {
+  color: #3f5871;
+}
+
+/* Folded rail is only as tall as its icons. */
+.side-wrap:has(.side.collapsed) {
+  align-self: start;
+}
+.side.collapsed {
+  flex: none;
+  align-self: flex-start;
+}
+
 /* Narrower desktops: controls drop below the title */
 @media (max-width: 1180px) {
   .page-heading {
@@ -1356,6 +1409,9 @@ tbody tr.focused {
   }
 }
 @media (max-width: 1190px) {
+  .actuals-text span {
+    display: none;
+  }
   .app-shell {
     grid-template-columns: 188px minmax(0, 1fr);
   }
@@ -1414,15 +1470,7 @@ tbody tr.focused {
     font-size: 11px;
     padding: 11px 10px;
   }
-  .topbar {
-    grid-template-columns: auto 1fr;
-  }
-  .breadcrumb {
-    display: none;
-  }
-  .view-switch {
-    justify-self: start;
-  }
+
   .toolbar {
     flex-wrap: wrap;
     row-gap: 12px;
@@ -1467,7 +1515,8 @@ tbody tr.focused {
   .sidebar-bottom,
   .methodology-nav,
   .data-status,
-  .nav-edge {
+  .nav-edge,
+  .topbar-end {
     display: none;
   }
   .app-shell.nav-collapsed .sidebar {
@@ -1486,16 +1535,8 @@ tbody tr.focused {
     display: none;
   }
   .topbar {
-    height: auto;
-    padding: 10px 20px;
-    grid-template-columns: 1fr;
-  }
-  .view-switch {
-    justify-self: stretch;
-  }
-  .view-switch button {
-    padding: 8px 6px;
-    font-size: 11px;
+    height: 50px;
+    padding: 0 20px;
   }
   .workspace {
     padding: 22px 18px 20px;
@@ -1522,6 +1563,12 @@ tbody tr.focused {
   }
   .cutoff-control label {
     margin: 0;
+  }
+  .topbar {
+    grid-template-columns: 1fr auto;
+  }
+  .actuals-text span {
+    display: none;
   }
   .context-note {
     align-items: flex-start;

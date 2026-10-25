@@ -16,8 +16,9 @@ workspace rather than reproducing marketing claims or its landing-page layout.
 
 ## Structure and behaviour
 
-Desktop: compact persistent left navigation; top bar carries the decision/review
-switch. Title and date/cutoff toolbar share one row. Full-width stage: chart on the
+Desktop: compact persistent left navigation; the top bar holds one "Show actuals"
+checkbox, the only switch between decision and after-delivery review. Title and
+date/cutoff toolbar share one row. Full-width stage: chart on the
 left, sticky side rail on the right with day summary and accuracy evidence, so the
 first viewport holds all key numbers. Hourly records and methodology swap into the
 rail (it widens) instead of extending the page. One focused hour is shared by the
